@@ -39,8 +39,10 @@
 
     <script type="module">
         import { db, auth } from './inc/config.js';
-        import { collection, query, where, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
-        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
+        
+        // Đã thêm ?v=2 để ép trình duyệt tải file mới, sửa lỗi không nhận diện được 'where'
+        import { collection, query, where, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js?v=2';
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js?v=2';
 
         const formatMoney = (num) => new Intl.NumberFormat('vi-VN').format(num) + ' đ';
 

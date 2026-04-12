@@ -49,11 +49,9 @@
             document.getElementById("xacnhan-box").classList.add("d-none");
             document.getElementById("loading-box").classList.remove("d-none");
 
-            try {
-                // Xóa tài liệu khỏi Firestore
+            try {             
                 await deleteDoc(doc(db, "chitieu", id));
                 
-                // Chuyển hướng về danh sách sau 0.5s cho mượt
                 setTimeout(() => {
                     window.location.href = "chitieu.html";
                 }, 500);
