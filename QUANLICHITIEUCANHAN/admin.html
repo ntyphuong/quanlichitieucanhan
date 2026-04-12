@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin - Quản lý</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style> body { background-color: #f8f9fa; } </style>
+</head>
+<body>
+
+<div class="container mt-4 pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <h3 class="fw-bold text-danger"><i class="bi bi-shield-lock-fill me-2"></i>Quản trị hệ thống</h3>
+        <button id="btnDangXuat" class="btn btn-outline-dark rounded-pill"><i class="bi bi-box-arrow-right"></i> Thoát</button>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th class="ps-4">Tài khoản</th><th>Quyền</th><th>Trạng thái</th><th class="text-end pe-4">Thao tác</th></tr></thead>
+                <tbody id="userList"><tr><td colspan="4" class="text-center py-4">Đang tải...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { auth, db } from './inc/config.js';
+    import { collection, getDocs, doc, updateDoc, getDoc } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
+    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
+
+    document.getElementById('btnDangXuat').addEventListener('click', () => { signOut(auth).then(() => window.location.href = "dangnhap.html"); });
+
+    onAuthStateChanged(auth, async (user) => {
+        if (!user) { window.location.href = "dangnhap.html"; return; }
+        
+        // KIỂM TRA PHẢI LÀ ADMIN KHÔNG
+        const userSnap = await getDoc(doc(db, "users", user.uid));
+        if (!userSnap.exists() || userSnap.data().role !== 'admin') {
+            alert("Cấm truy cập!"); window.location.href = "index.html"; return;
+        }
+        loadUsers();
+    });
+
+    async function loadUsers() {
+        const snap = await getDocs(collection(db, "users"));
+        let html = "";
+        snap.forEach((d) => {
+            let data = d.data(), isLocked = data.status === 'locked';
+            let btnClass = isLocked ? "btn-success" : "btn-danger";
+            let btnText = isLocked ? "Mở khóa" : "Khóa";
+            html += `<tr>
+                <td class="ps-4 fw-bold">${data.email}</td>
+                <td><span class="badge ${data.role === 'admin' ? 'bg-primary' : 'bg-secondary'}">${data.role}</span></td>
+                <td><span class="badge ${isLocked ? 'bg-danger' : 'bg-success'}">${isLocked ? 'Đã khóa' : 'Hoạt động'}</span></td>
+                <td class="text-end pe-4">
+                    ${data.role !== 'admin' ? `<button class="btn btn-sm ${btnClass} toggle-btn" data-id="${d.id}" data-st="${data.status}">${btnText}</button>` : ''}
+                </td>
+            </tr>`;
+        });
+        document.getElementById('userList').innerHTML = html;
+
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const uid = e.target.getAttribute('data-id'), st = e.target.getAttribute('data-st');
+                if(confirm("Xác nhận đổi trạng thái tài khoản này?")) {
+                    await updateDoc(doc(db, "users", uid), { status: st === 'active' ? 'locked' : 'active' });
+                    loadUsers();
+                }
+            });
+        });
+    }
+</script>
+</body>
+</html>

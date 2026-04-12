@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm chi tiêu</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: linear-gradient(135deg, #e3f2fd, #ffffff);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+        }
+
+        .card-custom {
+            width: 100%;
+            max-width: 450px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            border-top-left-radius: 20px !important;
+            border-top-right-radius: 20px !important;
+            font-size: 18px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card card-custom">
+
+        <div class="card-header bg-primary text-white text-center fw-bold py-3">
+            <i class="bi bi-wallet2"></i> Thêm chi tiêu mới
+        </div>
+
+        <div class="card-body p-4">
+
+            <form id="formChiTieu">
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-calendar-date text-primary"></i> Ngày chi
+                    </label>
+                    <input type="date" id="ngay" class="form-control rounded-3" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-list text-primary"></i> Danh mục chi
+                    </label>
+                    <select id="danhmuc" class="form-select rounded-3" required>
+                        <option value="">-- Chọn danh mục --</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-cash-stack text-success"></i> Số tiền
+                    </label>
+                    <input type="number" id="sotien" class="form-control rounded-3"
+                        placeholder="VD: 50000" min="0" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">
+                        <i class="bi bi-pencil-square text-warning"></i> Ghi chú
+                    </label>
+                    <textarea id="ghichu" class="form-control rounded-3" rows="2" placeholder="Nhập ghi chú (không bắt buộc)..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="chitieu.html" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </a>
+
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-save"></i> Lưu chi tiêu
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from './inc/config.js';
+        import { collection, addDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-firestore.js';
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
+
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                window.location.href = "dangnhap.html";
+                return;
+            }
+
+            // Tự động điền ngày hôm nay vào ô input Date
+            document.getElementById("ngay").valueAsDate = new Date();
+
+            // 1. LOAD DANH MỤC VÀO SELECT BOX
+            const select = document.getElementById("danhmuc");
+            const qDM = query(collection(db, "danhmuc"), where("uid", "==", user.uid));
+            
+            try {
+                const snapDM = await getDocs(qDM);
+                // Nếu chưa có danh mục nào thì báo nhẹ cho người dùng
+                if (snapDM.empty) {
+                    select.innerHTML = '<option value="">(Bạn chưa có danh mục nào)</option>';
+                } else {
+                    select.innerHTML = '<option value="">-- Chọn danh mục --</option>';
+                    snapDM.forEach(doc => {
+                        let data = doc.data();
+                        let option = document.createElement("option");
+                        option.value = doc.id; 
+                        option.textContent = data.TenDM; 
+                        select.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error("Lỗi lấy danh mục:", error);
+            }
+
+            // 2. XỬ LÝ SUBMIT LÊN FIREBASE
+            document.getElementById("formChiTieu").addEventListener("submit", async (e) => {
+                e.preventDefault();
+
+                let ngay = document.getElementById("ngay").value;
+                let selectDM = document.getElementById("danhmuc");
+                let danhmucID = selectDM.value;
+                let sotien = document.getElementById("sotien").value;
+                let ghichu = document.getElementById("ghichu").value;
+
+                if (!ngay || !sotien || !danhmucID) {
+                    alert("Vui lòng điền đầy đủ Ngày chi, Danh mục và Số tiền!");
+                    return;
+                }
+
+                // Lấy tên danh mục SAU khi đã check chắc chắn người dùng có chọn
+                let tenDM = selectDM.options[selectDM.selectedIndex].text;
+
+                // Vô hiệu hóa nút lưu để tránh click 2 lần (lưu đúp dữ liệu)
+                const submitBtn = document.querySelector("button[type='submit']");
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang lưu...';
+
+                try {
+                    await addDoc(collection(db, "chitieu"), {
+                        uid: user.uid,
+                        ngay: ngay,
+                        danhmucID: danhmucID,
+                        tenDM: tenDM,         
+                        sotien: parseFloat(sotien),
+                        ghichu: ghichu.trim() || "",
+                        createdAt: new Date()
+                    });
+
+                    alert("✅ Đã thêm chi tiêu thành công!");
+                    window.location.href = "chitieu.html";
+                } catch (error) {
+                    alert("Lỗi khi lưu: " + error.message);
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-save"></i> Lưu chi tiêu';
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>
