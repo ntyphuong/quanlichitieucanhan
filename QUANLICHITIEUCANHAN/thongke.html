@@ -5,6 +5,7 @@
     <title>Thống kê chi tiêu</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -28,32 +29,39 @@
 
 <div class="card">
 
-    <h4 class="text-center mb-3">📊 Thống kê chi tiêu</h4>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="index.html" class="btn btn-outline-secondary fw-bold rounded-pill shadow-sm">
+            <i class="bi bi-arrow-left me-1"></i> Trang chủ
+        </a>
+        <h4 class="mb-0 fw-bold text-primary">📊 Thống kê</h4>
+        <div style="width: 110px;"></div> </div>
 
-    <div class="mb-3 d-flex justify-content-center gap-2">
+    <div class="mb-4 d-flex justify-content-center gap-2">
         <input type="month" id="thang" class="form-control" style="max-width: 200px;">
-        <button id="btnExport" class="btn btn-success fw-bold">
+        <button id="btnExport" class="btn btn-success fw-bold shadow-sm">
             📗 Xuất Excel
         </button>
     </div>
 
-    <canvas id="myChart"></canvas>
+    <canvas id="myChart" style="max-height: 400px;"></canvas>
 
-    <h5 class="mt-4">📋 Chi tiết</h5>
+    <h5 class="mt-5 mb-3 fw-bold">📋 Chi tiết</h5>
 
-    <table class="table table-bordered">
-        <thead class="table-light">
-            <tr>
-                <th>Ngày</th>
-                <th>Danh mục</th>
-                <th>Số tiền</th>
-                <th>Ghi chú</th>
-            </tr>
-        </thead>
-        <tbody id="bang">
-            <tr><td colspan="4" class="text-center">Đang tải...</td></tr>
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Ngày</th>
+                    <th>Danh mục</th>
+                    <th>Số tiền</th>
+                    <th>Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody id="bang">
+                <tr><td colspan="4" class="text-center py-4">Đang tải dữ liệu...</td></tr>
+            </tbody>
+        </table>
+    </div>
 
 </div>
 
@@ -66,75 +74,85 @@ let chart;
 let dataExcel = []; 
 
 onAuthStateChanged(auth, async (user) => {
-
     if (!user) {
         window.location.href = "dangnhap.html";
         return;
     }
 
-    // Mặc định tháng hiện tại
     let input = document.getElementById("thang");
     let now = new Date();
     input.value = now.toISOString().slice(0,7);
 
     loadData(user);
-
     input.addEventListener("change", () => loadData(user));
 });
 
 async function loadData(user) {
-
     let thang = document.getElementById("thang").value;
 
-    // LẤY DANH MỤC
+    // 1. LẤY DANH MỤC TỪ DB
     const dmSnap = await getDocs(query(collection(db, "danhmuc"), where("uid", "==", user.uid)));
     let danhMucMap = {};
 
     dmSnap.forEach(doc => {
-        danhMucMap[doc.id] = doc.data().TenDM;
+        let dmData = doc.data();
+        // Bắt mọi trường hợp tên (tenDM, TenDM, name)
+        danhMucMap[doc.id] = dmData.tenDM || dmData.TenDM || dmData.name;
     });
 
-    // LẤY CHI TIÊU
+    // 2. LẤY CHI TIÊU
     const ctSnap = await getDocs(query(collection(db, "chitieu"), where("uid", "==", user.uid)));
 
     let tong = {};
     let html = "";
-    
     dataExcel = [];
 
     ctSnap.forEach(doc => {
         let data = doc.data();
 
         // LỌC THÁNG 
+        if(!data.ngay) return;
         let parts = data.ngay.split("-");
         let thangData = parts[0] + "-" + parts[1].padStart(2,'0');
 
         if (thangData !== thang) return;
 
-        let tenDM = danhMucMap[data.danhmuc] || "Khác";
+        // XỬ LÝ LOGIC DANH MỤC THÔNG MINH
+        let rawDM = data.danhmuc;
+        let tenDM = "Khác";
+
+        if (danhMucMap[rawDM]) {
+            tenDM = danhMucMap[rawDM]; // Nếu match ID thì lấy tên
+        } else if (data.tenDM) {
+            tenDM = data.tenDM; // Nếu chi tiêu có sẵn field tenDM
+        } else if (rawDM && rawDM.length < 20) {
+            tenDM = rawDM; // Nếu lưu thẳng tên vào trường danhmuc
+        }
+        // *Lưu ý: Nếu danh mục đã bị xóa, nó sẽ tự động nhận giá trị "Khác"
 
         if (!tong[tenDM]) tong[tenDM] = 0;
-        tong[tenDM] += data.sotien;
+        tong[tenDM] += (data.sotien || 0);
 
         html += `
         <tr>
             <td>${data.ngay}</td>
-            <td>${tenDM}</td>
-            <td>${data.sotien.toLocaleString('vi-VN')} đ</td>
+            <td><span class="badge bg-secondary">${tenDM}</span></td>
+            <td class="text-danger fw-bold">${(data.sotien || 0).toLocaleString('vi-VN')} đ</td>
             <td>${data.ghichu || ""}</td>
         </tr>`;
 
         dataExcel.push({
             "Ngày": data.ngay,
             "Danh mục": tenDM,
-            "Số tiền (VNĐ)": data.sotien,
+            "Số tiền (VNĐ)": data.sotien || 0,
             "Ghi chú": data.ghichu || ""
         });
     });
 
     document.getElementById("bang").innerHTML = html || `
-    <tr><td colspan="4" class="text-center">Không có dữ liệu tháng này</td></tr>`;
+    <tr><td colspan="4" class="text-center text-muted py-4"><i class="bi bi-inbox fs-4 d-block mb-2"></i>Không có dữ liệu chi tiêu trong tháng này</td></tr>`;
 
+    // 3. VẼ BIỂU ĐỒ
     let labels = Object.keys(tong);
     let values = Object.values(tong);
 
@@ -148,42 +166,36 @@ async function loadData(user) {
                 datasets: [{
                     data: values,
                     backgroundColor: [
-                        "#0d6efd", "#198754", "#ffc107", "#dc3545", "#6f42c1", "#0dcaf0"
-                    ]
+                        "#0d6efd", "#dc3545", "#ffc107", "#198754", "#6f42c1", "#0dcaf0", "#fd7e14", "#20c997"
+                    ],
+                    borderWidth: 2
                 }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
             }
         });
     }
 }
 
-// XỬ LÝ SỰ KIỆN XUẤT EXCEL
+// XUẤT EXCEL
 document.getElementById("btnExport").addEventListener("click", () => {
     if (dataExcel.length === 0) {
         alert("Không có dữ liệu để xuất Excel trong tháng này!");
         return;
     }
-
-    // Tạo worksheet 
     const ws = XLSX.utils.json_to_sheet(dataExcel);
-
-    const wscols = [
-        {wch: 15}, // Ngày
-        {wch: 25}, // Danh mục
-        {wch: 20}, // Số tiền
-        {wch: 40}  // Ghi chú
-    ];
+    const wscols = [{wch: 15}, {wch: 25}, {wch: 20}, {wch: 40}];
     ws['!cols'] = wscols;
-
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Thống kê chi tiêu");
-
-
     let thang = document.getElementById("thang").value;
-    
-    // Tải file xuống
     XLSX.writeFile(wb, `ChiTieu_${thang}.xlsx`);
 });
-
 </script>
 
 </body>
