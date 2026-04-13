@@ -63,23 +63,27 @@
             </div>
 
             <div class="row g-3 mb-5">
-                <div class="col-6 col-md-4">
+                <div class="col-6 col-md-3">
                     <a href="chitieu_them.html" class="btn btn-outline-danger w-100 py-3 rounded-4 fw-bold action-btn shadow-sm">
                         <i class="bi bi-dash-circle fs-2 d-block mb-2"></i> Thêm chi tiêu
                     </a>
                 </div>
-                <div class="col-6 col-md-4">
+                <div class="col-6 col-md-3">
                     <a href="chitieu.html" class="btn btn-outline-primary w-100 py-3 rounded-4 fw-bold action-btn shadow-sm">
                         <i class="bi bi-list-columns-reverse fs-2 d-block mb-2"></i> Lịch sử
                     </a>
                 </div>
-                <div class="col-12 col-md-4">
+                <div class="col-6 col-md-3">
                     <a href="danhmuc.html" class="btn btn-outline-success w-100 py-3 rounded-4 fw-bold action-btn shadow-sm">
-                        <i class="bi bi-grid fs-2 d-block mb-2"></i> Quản lý danh mục
+                        <i class="bi bi-grid fs-2 d-block mb-2"></i> Danh mục
+                    </a>
+                </div>
+                <div class="col-6 col-md-3">
+                    <a href="thongke.html" class="btn btn-outline-info w-100 py-3 rounded-4 fw-bold action-btn shadow-sm">
+                        <i class="bi bi-pie-chart fs-2 d-block mb-2"></i> Thống kê
                     </a>
                 </div>
             </div>
-
             <div class="row g-4">
                 <div class="col-lg-8">
                     <div class="card shadow-sm border-0 h-100 rounded-4">
@@ -109,6 +113,7 @@
 
         let currentUser = null;
 
+        // Hàm xử lý đăng nhập & bảo vệ tài khoản bị khóa
         onAuthStateChanged(auth, async (user) => {
             if (!user) { window.location.href = "dangnhap.html"; return; }
 
@@ -128,6 +133,7 @@
             await loadDashboardData();
         });
 
+        // Hàm chính để tải dữ liệu & vẽ biểu đồ
         async function loadDashboardData() {
             try {
                 const budgetRef = doc(db, "ngansach", `${currentUser.uid}_${currentMonthStr}`);
