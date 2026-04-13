@@ -10,7 +10,6 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
     <style>
-        /* Đồng bộ màu nền gradient với trang Chi tiêu */
         body {
             background: linear-gradient(135deg, #e3f2fd, #ffffff);
             height: 100vh;
@@ -31,6 +30,20 @@
             border-top-left-radius: 20px !important;
             border-top-right-radius: 20px !important;
             font-size: 18px;
+        }
+        
+        .icon-preview-box {
+            width: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-right: none;
+            border-top-left-radius: 0.375rem;
+            border-bottom-left-radius: 0.375rem;
+            font-size: 1.2rem;
+            color: #0d6efd;
         }
     </style>
 </head>
@@ -62,19 +75,33 @@
                     <label class="form-label fw-semibold">
                         <i class="bi bi-emoji-smile text-warning"></i> Icon biểu tượng
                     </label>
-                    <select class="form-select rounded-3" id="Icon" required>
-                        <option value="">-- Chọn biểu tượng --</option>
-                        <option value="bi-cart">🛒 Mua sắm (bi-cart)</option>
-                        <option value="bi-cup-hot">☕ Ăn uống (bi-cup-hot)</option>
-                        <option value="bi-house">🏠 Nhà cửa (bi-house)</option>
-                        <option value="bi-gift">🎁 Quà tặng (bi-gift)</option>
-                        <option value="bi-car-front">🚗 Di chuyển (bi-car-front)</option>
-                        <option value="bi-piggy-bank">🐖 Tiết kiệm (bi-piggy-bank)</option>
-                        <option value="bi-controller">🎮 Giải trí (bi-controller)</option>
-                    </select>
+                    
+                    <div class="d-flex mb-2">
+                        <div class="icon-preview-box" id="preview-container">
+                            <i id="icon-preview" class="bi bi-star"></i>
+                        </div>
+                        <select class="form-select" style="border-top-left-radius: 0; border-bottom-left-radius: 0;" id="Icon" required>
+                            <option value="">-- Chọn biểu tượng --</option>
+                            <option value="bi-cart">🛒 Mua sắm (bi-cart)</option>
+                            <option value="bi-cup-hot">☕ Ăn uống (bi-cup-hot)</option>
+                            <option value="bi-house">🏠 Nhà cửa (bi-house)</option>
+                            <option value="bi-gift">🎁 Quà tặng (bi-gift)</option>
+                            <option value="bi-car-front">🚗 Di chuyển (bi-car-front)</option>
+                            <option value="bi-piggy-bank">🐖 Tiết kiệm (bi-piggy-bank)</option>
+                            <option value="bi-controller">🎮 Giải trí (bi-controller)</option>
+                            <option value="custom" class="text-primary fw-bold">✨ Tự nhập mã Icon khác...</option>
+                        </select>
+                    </div>
+
+                    <div id="customIconDiv" class="d-none">
+                        <input type="text" class="form-control" id="CustomIcon" placeholder="Nhập mã icon (VD: bi-airplane)" />
+                        <small class="text-muted d-block mt-1">
+                            * Tìm mã Icon tại: <a href="https://icons.getbootstrap.com/" target="_blank" class="text-decoration-none">Bootstrap Icons</a>
+                        </small>
+                    </div>
                 </div>
 
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between mt-4">
                     <a href="danhmuc.html" class="btn btn-outline-secondary">
                         <i class="bi bi-arrow-left"></i> Quay lại
                     </a>
@@ -88,26 +115,55 @@
     </div>
 
     <script>
+        $('#Icon').on('change', function() {
+            const val = $(this).val();
+            
+            if (val === 'custom') {
+                $('#customIconDiv').removeClass('d-none');
+                $('#CustomIcon').attr('required', true).focus();
+                $('#icon-preview').attr('class', 'bi bi-pencil'); 
+            } else {
+
+                $('#customIconDiv').addClass('d-none');
+                $('#CustomIcon').removeAttr('required');
+                
+                if(val) {
+                    $('#icon-preview').attr('class', 'bi ' + val);
+                } else {
+                    $('#icon-preview').attr('class', 'bi bi-star');
+                }
+            }
+        });
+
+        $('#CustomIcon').on('input', function() {
+            const customVal = $(this).val().trim();
+            if(customVal) {
+                $('#icon-preview').attr('class', 'bi ' + customVal);
+            } else {
+                $('#icon-preview').attr('class', 'bi bi-pencil');
+            }
+        });
+
+        // 3. Xử lý khi Submit form
         $('#formThem').on('submit', function(e) {
-            // 1. Chặn không cho chuyển trang ngay để JS kịp làm việc
             e.preventDefault();
 
-            // 2. Lấy giá trị từ các ô nhập
             const ma = $('#MaDM').val();
             const ten = $('#TenDM').val();
-            const icon = $('#Icon').val();
+            let icon = $('#Icon').val();
 
-            // 3. Cất vào "túi" localStorage
+            if (icon === 'custom') {
+                icon = $('#CustomIcon').val().trim();
+            }
+
             localStorage.setItem('maDM', ma);
             localStorage.setItem('tenDM', ten);
             localStorage.setItem('icon', icon);
 
-            // 4. Hiệu ứng Loading chống bấm đúp (Double-click)
             const btn = $('#btnSubmit');
             btn.prop('disabled', true);
             btn.html('<span class="spinner-border spinner-border-sm"></span> Đang xử lý...');
 
-            // Delay 0.3s để người dùng kịp nhìn thấy hiệu ứng xoay trước khi nhảy trang
             setTimeout(() => {
                 this.submit();
             }, 300);

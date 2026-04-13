@@ -1,0 +1,105 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm" style="background: linear-gradient(135deg, #0d6efd, #0dcaf0) !important;">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="index.html">
+            <i class="bi bi-cloud-check-fill me-1 text-warning"></i> FinCloud
+        </a>
+        
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        
+        <div class="collapse navbar-collapse" id="mainNavbar">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 fw-medium gap-1">
+                <li class="nav-item">
+                    <a class="nav-link px-3 rounded" href="index.html" id="nav-index"><i class="bi bi-house-door me-1"></i> Tổng quan</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3 rounded" href="chitieu.html" id="nav-chitieu"><i class="bi bi-wallet2 me-1"></i> Sổ chi tiêu</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3 rounded" href="danhmuc.html" id="nav-danhmuc"><i class="bi bi-tags me-1"></i> Danh mục</a>
+                </li>
+            </ul>
+            
+            <div class="d-flex align-items-center mt-2 mt-lg-0">
+                <div class="dropdown">
+                    <a class="text-white text-decoration-none dropdown-toggle d-flex align-items-center p-2 rounded hover-bg-light-alpha" href="#" role="button" data-bs-toggle="dropdown">
+                        <img id="user-avatar" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="rounded-circle me-2 border border-2 border-white shadow-sm" width="36" height="36" alt="Avatar">
+                        <span id="user-name" class="fw-bold">Đang tải...</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3">
+                        <li>
+                            <a class="dropdown-item py-2" href="hoso.html">
+                                <i class="bi bi-person-circle me-2 text-primary"></i> Hồ sơ của tôi
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger fw-bold py-2" href="#" id="btn-logout">
+                                <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<style>
+    /* Làm đẹp nhẹ cho thanh Navbar */
+    .hover-bg-light-alpha:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        transition: 0.3s ease;
+    }
+    .navbar-nav .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+</style>
+
+<script>
+    // JS nhỏ xíu để tự động làm sáng (active) menu đang được chọn
+    $(document).ready(function() {
+        let currentPath = window.location.pathname.split('/').pop() || 'index.html';
+        if(currentPath.includes('chitieu')) $('#nav-chitieu').addClass('active bg-white text-primary fw-bold');
+        else if(currentPath.includes('danhmuc')) $('#nav-danhmuc').addClass('active bg-white text-primary fw-bold');
+        else $('#nav-index').addClass('active bg-white text-primary fw-bold');
+    });
+</script>
+
+<script type="module">
+    import { auth } from './inc/config.js';
+    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
+
+    // 1. Tự động lấy Tên và Avatar điền vào Navbar
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            const elName = document.getElementById('user-name');
+            const elAvatar = document.getElementById('user-avatar');
+            
+            if(elName) elName.innerText = user.displayName || "Người dùng";
+            if(elAvatar) elAvatar.src = user.photoURL || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+        }
+    });
+
+    // 2. Lắng nghe sự kiện click vào nút Đăng xuất
+    document.body.addEventListener('click', async function(e) {
+        // Kiểm tra xem phần tử bị click có phải là nút Đăng xuất (hoặc nằm trong nút đó) không
+        if (e.target.closest('#btn-logout')) {
+            e.preventDefault(); // Chặn trang bị giật/tải lại
+            
+            if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?")) {
+                try {
+                    // Gọi hàm đăng xuất của Firebase
+                    await signOut(auth);
+                    
+                    // Đá thẳng về trang đăng nhập
+                    window.location.href = "dangnhap.html";
+                } catch (error) {
+                    console.error("Lỗi đăng xuất:", error);
+                    alert("Đã xảy ra lỗi, vui lòng thử lại!");
+                }
+            }
+        }
+    });
+</script>
