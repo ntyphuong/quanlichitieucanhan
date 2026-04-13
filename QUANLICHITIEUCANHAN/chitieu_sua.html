@@ -69,7 +69,7 @@
         if (!id) { window.location.href = "chitieu.html"; return; }
 
         try {
-            // 1. Tải danh mục của user trước
+            // Tải danh mục
             const q = query(collection(db, "danhmuc"), where("uid", "==", user.uid));
             const catSnap = await getDocs(q);
             const select = document.getElementById("danhmuc");
@@ -78,7 +78,7 @@
                 select.innerHTML += `<option value="${d.id}" data-icon="${data.Icon || 'bi-receipt'}">${data.TenDM}</option>`;
             });
 
-            // 2. Tải dữ liệu chi tiêu hiện tại
+            // Tải dữ liệu chi tiêu hiện tại
             const docRef = doc(db, "chitieu", id);
             const docSnap = await getDoc(docRef);
 
@@ -100,7 +100,7 @@
             alert("Lỗi tải dữ liệu!");
         }
 
-        // 3. Xử lý Cập nhật
+        // Xử lý Cập nhật
         document.getElementById("formSua").addEventListener("submit", async (e) => {
             e.preventDefault();
             const btn = document.getElementById("btnSubmit");

@@ -104,7 +104,7 @@ async function loadData(user) {
     ctSnap.forEach(doc => {
         let data = doc.data();
 
-        //  FIX LỌC THÁNG 
+        //LỌC THÁNG 
         let parts = data.ngay.split("-");
         let thangData = parts[0] + "-" + parts[1].padStart(2,'0');
 

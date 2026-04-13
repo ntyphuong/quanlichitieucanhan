@@ -103,13 +103,10 @@
         import { auth } from './inc/config.js';
         import { onAuthStateChanged, updateProfile } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
 
-        // Load Navbar
         $('#navbar').load('inc/navbar.html');
 
-        // Theo dõi trạng thái đăng nhập
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // Điền dữ liệu hiện tại vào form
                 $('#display-name-title').text(user.displayName || "Người dùng mới");
                 $('#display-email').text(user.email);
                 $('#InputName').val(user.displayName || "");
@@ -123,7 +120,6 @@
             }
         });
 
-        // Xử lý khi bấm Lưu
         $('#formHoso').on('submit', async function(e) {
             e.preventDefault();
             
@@ -134,19 +130,16 @@
             btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Đang xử lý...');
 
             try {
-                // Cập nhật thông tin lên Firebase Auth
                 await updateProfile(auth.currentUser, {
                     displayName: newName,
                     photoURL: newAvatar
                 });
 
-                // Cập nhật giao diện preview ngay lập tức
                 $('#display-name-title').text(newName);
                 if(newAvatar) $('#preview-avatar').attr('src', newAvatar);
 
                 alert("✅ Đã cập nhật hồ sơ thành công!");
                 
-                // Tải lại trang để đồng bộ thanh Navbar
                 window.location.reload();
 
             } catch (error) {
@@ -157,7 +150,6 @@
             }
         });
 
-        // Preview ảnh khi dán URL vào
         $('#InputAvatar').on('input', function() {
             const url = $(this).val();
             if(url) {

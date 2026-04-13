@@ -69,7 +69,6 @@
         const select = document.getElementById("danhmuc");
         snap.forEach(doc => {
             const data = doc.data();
-            // Lưu icon vào attribute để lát lấy cho nhanh
             select.innerHTML += `<option value="${doc.id}" data-icon="${data.Icon || 'bi-receipt'}">${data.TenDM}</option>`;
         });
 
@@ -94,10 +93,6 @@
 
             try {
                 await addDoc(collection(db, "chitieu"), data);
-                
-                // Cập nhật ngân sách (nếu bạn có tính năng này)
-                // await updateDoc(doc(db, "ngansach", "ID_CUA_BAN"), { sodu: increment(-data.sotien) });
-
                 window.location.href = "chitieu.html";
             } catch (err) {
                 alert("Lỗi: " + err.message);

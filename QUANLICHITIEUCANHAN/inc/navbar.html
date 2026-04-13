@@ -47,7 +47,6 @@
 </nav>
 
 <style>
-    /* Làm đẹp nhẹ cho thanh Navbar */
     .hover-bg-light-alpha:hover {
         background-color: rgba(255, 255, 255, 0.1);
         transition: 0.3s ease;
@@ -58,7 +57,6 @@
 </style>
 
 <script>
-    // JS nhỏ xíu để tự động làm sáng (active) menu đang được chọn
     $(document).ready(function() {
         let currentPath = window.location.pathname.split('/').pop() || 'index.html';
         if(currentPath.includes('chitieu')) $('#nav-chitieu').addClass('active bg-white text-primary fw-bold');
@@ -71,7 +69,7 @@
     import { auth } from './inc/config.js';
     import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.3.1/firebase-auth.js';
 
-    // 1. Tự động lấy Tên và Avatar điền vào Navbar
+    // Tự lấy Tên và Avatar điền vào Navbar
     onAuthStateChanged(auth, (user) => {
         if (user) {
             const elName = document.getElementById('user-name');
@@ -82,18 +80,15 @@
         }
     });
 
-    // 2. Lắng nghe sự kiện click vào nút Đăng xuất
+    // Sự kiện click Đăng xuất
     document.body.addEventListener('click', async function(e) {
-        // Kiểm tra xem phần tử bị click có phải là nút Đăng xuất (hoặc nằm trong nút đó) không
         if (e.target.closest('#btn-logout')) {
             e.preventDefault(); // Chặn trang bị giật/tải lại
             
             if (confirm("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?")) {
                 try {
-                    // Gọi hàm đăng xuất của Firebase
                     await signOut(auth);
                     
-                    // Đá thẳng về trang đăng nhập
                     window.location.href = "dangnhap.html";
                 } catch (error) {
                     console.error("Lỗi đăng xuất:", error);

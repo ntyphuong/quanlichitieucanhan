@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         body { background-color: #f4f6f9; }
-        /* Style giao diện mới */
+
         .day-group { background: white; border-radius: 15px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .day-header { background: #f8f9fa; padding: 12px 20px; border-bottom: 1px solid #eee; }
         .transaction-item { transition: background 0.2s; border: none !important; border-bottom: 1px solid #f1f1f1 !important; }
@@ -84,7 +84,6 @@ onAuthStateChanged(auth, async (user) => {
         let txs = []; 
         snap.forEach(d => txs.push({id: d.id, ...d.data()}));
         
-        // SẮP XẾP BẰNG JAVASCRIPT
         txs.sort((a, b) => b.ngay.localeCompare(a.ngay));
 
         let grouped = {};

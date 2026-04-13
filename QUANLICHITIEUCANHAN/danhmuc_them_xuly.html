@@ -38,12 +38,11 @@
 
                 try {
                     setTimeout(async () => {
-                        // BƯỚC QUAN TRỌNG: Dùng addDoc để Firebase tự tạo ID ngẫu nhiên, không lo trùng mã
                         await addDoc(collection(db, 'danhmuc'), {
                             MaDM: maDM,
                             TenDM: tenDM,
                             Icon: icon || "bi-tag",
-                            uid: user.uid, // Gắn ID người dùng để bảo mật
+                            uid: user.uid, 
                             createdAt: new Date()
                         });
 

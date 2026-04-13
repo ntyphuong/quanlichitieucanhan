@@ -41,7 +41,6 @@
             if (!user) { window.location.href = "dangnhap.html"; return; }
 
             try {
-                // Chỉ lấy danh mục của đúng user đang đăng nhập
                 const q = query(collection(db, "danhmuc"), where("uid", "==", user.uid));
                 const snap = await getDocs(q);
                 let html = "";
